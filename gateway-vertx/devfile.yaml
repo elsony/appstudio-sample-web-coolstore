@@ -1,0 +1,24 @@
+metadata:
+  description: Upstream Vert.x using Java
+  displayName: Vert.x Java
+  language: java
+  name: gateway-vertx
+  projectType: vertx
+  tags:
+  - Java
+  - Vert.x
+  version: 1.1.0
+schemaVersion: 2.0.0
+parent:
+  id: java-vertx
+  registryUrl: "https://registry.devfile.io"
+  components:
+  - container:
+      endpoints:
+      - exposure: public
+        name: gateway
+        targetPort: 9090
+      - exposure: internal
+        name: '8080-tcp'
+        targetPort: 8080
+    name: runtime

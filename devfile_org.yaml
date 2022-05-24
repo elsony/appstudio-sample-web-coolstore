@@ -1,0 +1,172 @@
+schemaVersion: 2.1.0
+metadata:
+  name: web-coolstore
+# projects:
+#   - name: catalog-spring-boot
+#     git:
+#       remotes:
+#         origin: 'https://github.com/yangcao77/catalog-spring-boot'
+#   - name: inventory-quarkus
+#     git:
+#       remotes:
+#         origin: 'https://github.com/yangcao77/inventory-quarkus'
+#   - name: gateway-vertx
+#     git:
+#       remotes:
+#         origin: 'https://github.com/yangcao77/gateway-vertx'
+#   - name: web-nodejs
+#     git:
+#       remotes:
+#         origin: 'https://github.com/yangcao77/web-nodejs'
+projects:
+  - name: web-coolstore
+    git:
+      remotes:
+        origin: 'https://github.com/yangcao77/cloud-native-workshop.git'
+      checkoutFrom:
+        remote: origin
+        revision: 'completed-sample'
+components:
+  - name: nodejs
+    container:
+      image: quay.io/eclipse/che-nodejs10-ubi:next
+      memoryLimit: 1024Mi
+      mountSources: true
+      endpoints:
+        - name: web
+          targetPort: 3000
+  - name: java11-maven
+    container:
+      image: quay.io/eclipse/che-java11-maven:next
+      memoryLimit: 1024Mi
+      mountSources: true
+      env:
+        - name: MAVEN_CONFIG
+          value: ""
+        - name: JAVA_OPTS
+          value: "-XX:MaxRAMPercentage=50.0 -XX:+UseParallelGC -XX:MinHeapFreeRatio=10
+            -XX:MaxHeapFreeRatio=20 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90
+            -Dsun.zip.disableMemoryMapping=true -Xms20m -Djava.security.egd=file:/dev/./urandom
+            -Duser.home=/home/user"
+        - name: MAVEN_OPTS
+          value: $(JAVA_OPTS)
+      endpoints:
+        - name: catalog
+          targetPort: 9000
+        - name: gateway
+          targetPort: 9090
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+  - name: m2
+    volume:
+      size: 3Gi
+  - name: java-quarkus
+    container:
+      image: quay.io/eclipse/che-quarkus:next
+      env:
+        - name: JAVA_OPTS
+          value: "-XX:MaxRAMPercentage=50.0 -XX:+UseParallelGC -XX:MinHeapFreeRatio=10
+            -XX:MaxHeapFreeRatio=20 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90
+            -Dsun.zip.disableMemoryMapping=true -Xms20m -Djava.security.egd=file:/dev/./urandom
+            -Duser.home=/home/user"
+        - name: MAVEN_OPTS
+          value: $(JAVA_OPTS)
+        - name: QUARKUS_HTTP_HOST
+          value: 0.0.0.0
+      memoryLimit: 4G
+      mountSources: true
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+      endpoints:
+        - name: inventory
+          targetPort: 8080
+commands:
+  - id: catalog-build
+    exec:
+      component: java11-maven
+      commandLine: "mvn clean -Dmaven.repo.local=/home/user/.m2/repository package -Dmaven.test.skip=true"
+      workingDir: $PROJECTS_ROOT/web-coolstore/catalog-spring-boot
+      group:
+        kind: build
+  - id: catalog-run
+    exec:
+      component: java11-maven
+      commandLine: "mvn -Dmaven.repo.local=/home/user/.m2/repository spring-boot:run"
+      workingDir: $PROJECTS_ROOT/web-coolstore/catalog-spring-boot
+      group:
+        kind: run
+  - id: inventory-compile
+    exec:
+      component: java-quarkus
+      commandLine: "mvn -Dmaven.repo.local=/home/user/.m2/repository compile"
+      workingDir: $PROJECTS_ROOT/web-coolstore/inventory-quarkus
+  - id: inventory-run
+    exec:
+      component: java-quarkus
+      commandLine: "mvn -Dmaven.repo.local=/home/user/.m2/repository quarkus:dev -Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+      hotReloadCapable: true
+      group:
+        kind: run
+      workingDir: $PROJECTS_ROOT/web-coolstore/inventory-quarkus
+  - id: gateway-build
+    exec:
+      commandLine: mvn package -Dmaven.test.skip=true
+      component: java11-maven
+      workingDir: $PROJECTS_ROOT/web-coolstore/gateway-vertx
+      group:
+        kind: build
+  - id: gateway-run
+    exec:
+      commandLine: mvn io.reactiverse:vertx-maven-plugin:run
+      component: java11-maven
+      workingDir: $PROJECTS_ROOT/web-coolstore/gateway-vertx
+      group:
+        kind: run
+  - id: web-install
+    exec:
+      component: nodejs
+      commandLine: npm install
+      workingDir: $PROJECTS_ROOT/web-coolstore/web-nodejs
+      group:
+        kind: build
+  - id: web-run
+    exec:
+      component: nodejs
+      commandLine: npm start
+      workingDir: $PROJECTS_ROOT/web-coolstore/web-nodejs
+      group:
+        kind: run
+  - id: deploy-catalog
+    composite:
+      commands:
+        - catalog-build
+        - catalog-run
+      parallel: false
+  - id: deploy-inventory
+    composite:
+      commands:
+        - inventory-compile
+        - inventory-run
+      parallel: false
+  - id: deploy-gateway
+    composite:
+      commands:
+        - gateway-build
+        - gateway-run
+      parallel: false
+  - id: deploy-web
+    composite:
+      commands:
+        - web-install
+        - web-run
+      parallel: false
+  - id: deploy-all
+    composite:
+      commands:
+        - deploy-catalog
+        - deploy-inventory
+        - deploy-gateway
+        - deploy-web
+      parallel: false

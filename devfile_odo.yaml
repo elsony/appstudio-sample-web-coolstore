@@ -1,0 +1,51 @@
+schemaVersion: 2.1.0
+metadata:
+  name: web-coolstore
+# attributes:
+#   .vscode/extensions.json: |
+#     {
+#       "recommendations": [
+#         "redhat.vscode-openshift-connector"
+#       ]
+#     }
+projects:
+  - name: web-coolstore
+    git:
+      remotes:
+        origin: 'https://github.com/yangcao77/cloud-native-workshop.git'
+      checkoutFrom:
+        remote: origin
+        revision: 'completed-sample'
+components:
+  - container:
+      image: docker.io/yangcao77/coolstore
+      memoryLimit: 2048Mi
+      sourceMapping: /projects
+      volumeMounts:
+        - name: kube
+          path: /home/theia/.kube
+    name: web-coolstore
+  - name: kube
+    volume:
+        size: 1024Mi
+commands:
+  - id: start-catalog
+    exec:
+      component: web-coolstore
+      commandLine: cd ${PROJECTS_SOURCE}/web-coolstore/catalog-spring-boot && ./deploy.sh ${DEVWORKSPACE_NAMESPACE}
+  - id: start-inventory
+    exec:
+      component: web-coolstore
+      commandLine: cd ${PROJECTS_SOURCE}/web-coolstore/inventory-quarkus && ./deploy.sh ${DEVWORKSPACE_NAMESPACE}
+  - id: start-gateway
+    exec:
+      component: web-coolstore
+      commandLine: cd ${PROJECTS_SOURCE}/web-coolstore/gateway-vertx && ./deploy.sh ${DEVWORKSPACE_NAMESPACE}
+  - id: start-webui
+    exec:
+      component: web-coolstore
+      commandLine: cd ${PROJECTS_SOURCE}/web-coolstore/web-nodejs && ./deploy.sh ${DEVWORKSPACE_NAMESPACE}
+  - id: deploy-all
+    exec:
+      component: web-coolstore
+      commandLine: cd ${PROJECTS_SOURCE}/web-coolstore && ./deploy-all.sh ${DEVWORKSPACE_NAMESPACE}

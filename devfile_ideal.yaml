@@ -1,0 +1,110 @@
+schemaVersion: 2.1.0
+metadata:
+# tools are expected to use this name as the app name
+# should set label to all sub projects resources: 
+# app.kubernetes.io/part-of = <top level devfile metadata.name>
+ name: web-coolstore
+variables:
+  repo: 'https://github.com/yangcao77/web-coolstore.git'
+projects:
+ - name: catalog
+   git:
+     remotes:
+       origin: "{{repo}}"
+     # proposed to add git.path to git resource spec
+     # otherwise, all subprojects need to be under different repos
+     # see example in comment below
+     path: catalog-spring-boot
+ - name: inventory
+   git:
+     remotes:
+       origin: "{{repo}}"
+     path: inventory-quarkus
+ - name: gateway
+   git:
+     remotes:
+       origin: "{{repo}}"
+     path: gateway-vertx
+ - name: web
+   git:
+     remotes:
+       origin: "{{repo}}"
+     path: web-nodejs
+# projects:
+#   - name: catalog-spring-boot
+#     git:
+#       remotes:
+#         origin: 'https://github.com/yangcao77/catalog-spring-boot'
+#   - name: inventory-quarkus
+#     git:
+#       remotes:
+#         origin: 'https://github.com/yangcao77/inventory-quarkus'
+#   - name: gateway-vertx
+#     git:
+#       remotes:
+#         origin: 'https://github.com/yangcao77/gateway-vertx'
+#   - name: web-nodejs
+#     git:
+#       remotes:
+#         origin: 'https://github.com/yangcao77/web-nodejs'
+commands:
+ - id: deploy-catalog
+   composite:
+     commands:
+      # proposed to change the composite.commands to list of struct
+      # {name: <commandName, required>, project: <projectName, optional>}, the command belongs to the specific project
+      # this will be a breaking change, since composite.commands was in type of []string
+      # for alternate approach, see example in comment below
+       - name: build
+         project: catalog
+       - name: run
+         project: catalog
+      parallel: false
+ - id: deploy-inventory
+   composite:
+     commands:
+       - name: init-compile
+         project: inventory
+       - name: dev-run
+         project: inventory
+      parallel: false
+ - id: deploy-gateway
+   composite:
+     commands:
+       - name: mvn-package
+         project: gateway
+       - name: runtime
+         project: gateway
+      parallel: false
+ - id: deploy-web
+   composite:
+     commands:
+       - name: install
+         project: web
+       - name: run
+         project: web
+      parallel: false
+ - id: deploy-all
+   composite:
+     commands:
+       - name: deploy-catalog
+       - name: deploy-inventory
+       - name: deploy-gateway
+       - name: deploy-web
+     parallel: false
+# alternative approach to specify name and project
+# composite.commands will still be []string, but in format of "<commandName>/<projectName>" 
+#  - id: deploy-inventory
+#    composite:
+#      commands:
+#        - init-compile/inventory
+#        - dev-run/inventory
+#       parallel: false
+#  - id: deploy-all
+#    composite:
+#      commands:
+#        - deploy-catalog
+#        - deploy-inventory
+#        - deploy-gateway
+#        - deploy-web
+#      parallel: false

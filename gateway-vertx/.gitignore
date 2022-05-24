@@ -1,0 +1,15 @@
+target/
+*.iml
+*.log
+*.class
+tmp/
+.idea/
+.openshiftio
+.settings/
+.classpath
+.project
+.DS_Store
+bower_components/
+node_modules/
+/Users/stephanie/Documents/cloud-native-workshop/labs/gateway-vertx/.odo/env
+.odo/odo-file-index.json

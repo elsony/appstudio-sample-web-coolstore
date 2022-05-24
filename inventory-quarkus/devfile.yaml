@@ -1,0 +1,25 @@
+metadata:
+  description: Quarkus with Java
+  displayName: Quarkus Java
+  language: java
+  name: inventory-quarkus
+  projectType: quarkus
+  tags:
+  - Java
+  - Quarkus
+  version: 1.1.0
+  website: https://quarkus.io
+schemaVersion: 2.0.0
+parent:
+  id: java-quarkus
+  registryUrl: "https://registry.devfile.io"
+  components:
+  - container:
+      endpoints:
+      - exposure: public
+        name: inventory
+        targetPort: 8080
+      - name: '8080-http'
+        targetPort: 8080
+        exposure: internal
+    name: tools

@@ -1,0 +1,25 @@
+metadata:
+  description: Stack with Node.js 14
+  displayName: Node.js Runtime
+  language: nodejs
+  name: web-nodejs
+  projectType: nodejs
+  tags:
+  - NodeJS
+  - Express
+  - ubi8
+  version: 1.0.1
+schemaVersion: 2.0.0
+parent:
+  id: nodejs
+  registryUrl: "https://registry.devfile.io"
+  components:
+  - container:
+      endpoints:
+      - exposure: public
+        name: web
+        targetPort: 3000
+      - name: http-3000
+        targetPort: 3000
+        exposure: internal
+    name: runtime

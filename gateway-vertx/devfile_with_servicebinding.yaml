@@ -1,0 +1,174 @@
+commands:
+- exec:
+    commandLine: mvn package -Dmaven.test.skip=true
+    component: runtime
+    group:
+      isDefault: true
+      kind: build
+  id: mvn-package
+- exec:
+    commandLine: mvn io.reactiverse:vertx-maven-plugin:run
+    component: runtime
+    group:
+      isDefault: true
+      kind: run
+  id: run
+- exec:
+    commandLine: mvn io.reactiverse:vertx-maven-plugin:debug -Ddebug.port=${DEBUG_PORT}
+    component: runtime
+    group:
+      isDefault: true
+      kind: debug
+  id: debug
+components:
+- container:
+    endpoints:
+    - exposure: public
+      name: gateway
+      path: /
+      protocol: http
+      targetPort: 9090
+    image: quay.io/eclipse/che-java11-maven:nightly
+    memoryLimit: 512Mi
+    mountSources: true
+    volumeMounts:
+    - name: m2
+      path: /home/user/.m2
+  name: runtime
+- name: m2
+  volume:
+    size: 3Gi
+- kubernetes:
+    inlined: |
+      apiVersion: binding.operators.coreos.com/v1alpha1
+      kind: ServiceBinding
+      metadata:
+        creationTimestamp: null
+        name: gateway-inventory
+      spec:
+        application:
+          group: apps
+          name: gateway-coolstore
+          resource: deployments
+          version: v1
+        bindAsFiles: false
+        detectBindingResources: true
+        services:
+        - group: ""
+          kind: Service
+          name: inventory-coolstore
+          version: v1
+      status:
+        secret: ""
+  name: gateway-inventory
+- kubernetes:
+    inlined: |
+      apiVersion: binding.operators.coreos.com/v1alpha1
+      kind: ServiceBinding
+      metadata:
+        creationTimestamp: null
+        name: gateway-catalog
+      spec:
+        application:
+          group: apps
+          name: gateway-coolstore
+          resource: deployments
+          version: v1
+        bindAsFiles: false
+        detectBindingResources: true
+        services:
+        - group: ""
+          kind: Service
+          name: catalog-coolstore
+          version: v1
+      status:
+        secret: ""
+  name: gateway-catalog
+metadata:
+  description: Upstream Vert.x using Java
+  displayName: Vert.x Java
+  language: java
+  name: java-vertx
+  projectType: vertx
+  tags:
+  - Java
+  - Vert.x
+  version: 1.1.0
+schemaVersion: 2.0.0
+starterProjects:
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-http-example
+  name: vertx-http-example
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-istio-circuit-breaker-booster
+  name: vertx-istio-circuit-breaker-booster
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-istio-routing-booster
+  name: vertx-istio-routing-booster
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-secured-http-example-redhat
+  name: vertx-secured-http-example-redhat
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-crud-example-redhat
+  name: vertx-crud-example-redhat
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-istio-security-booster
+  name: vertx-istio-security-booster
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-crud-example
+  name: vertx-crud-example
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-circuit-breaker-example
+  name: vertx-circuit-breaker-example
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-configmap-example
+  name: vertx-configmap-example
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-circuit-breaker-example-redhat
+  name: vertx-circuit-breaker-example-redhat
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-cache-example-redhat
+  name: vertx-cache-example-redhat
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-cache-example
+  name: vertx-cache-example
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-secured-http-example
+  name: vertx-secured-http-example
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-health-checks-example-redhat
+  name: vertx-health-checks-example-redhat
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-http-example-redhat
+  name: vertx-http-example-redhat
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-health-checks-example
+  name: vertx-health-checks-example
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-configmap-example-redhat
+  name: vertx-configmap-example-redhat
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-messaging-work-queue-booster
+  name: vertx-messaging-work-queue-booster
+- git:
+    remotes:
+      origin: https://github.com/openshift-vertx-examples/vertx-istio-distributed-tracing-booster
+  name: vertx-istio-distributed-tracing-booster
